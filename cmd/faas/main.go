@@ -28,6 +28,14 @@ func (a *App) Run() {
 func main() {
 	e := echo.New()
 	e.Use(middleware.Logger())
+	validator := func(token string, c echo.Context) (bool, error) {
+		return token == os.Getenv("TOKEN"), nil
+	}
+	e.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
+		KeyLookup: "query:TOKEN",
+		Validator: validator,
+	}))
+
 	app := &App{
 		Server:    e,
 		functions: map[string]string{},
@@ -86,41 +94,37 @@ func (a *App) saveUpload(c echo.Context) error {
 	//------------
 
 	// Multipart form
-	form, err := c.MultipartForm()
+	file, err := c.FormFile("file")
 	if err != nil {
 		return err
 	}
-	files := form.File["files"]
 
-	for _, file := range files {
-		// Source
-		src, err := file.Open()
-		if err != nil {
-			return err
-		}
-		defer src.Close()
+	// Source
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
 
-		// Destination
-		dst, err := os.Create("bin/" + name)
-		if err != nil {
-			return err
-		}
-		defer dst.Close()
+	// Destination
+	dst, err := os.Create("bin/" + name)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
 
-		// Copy
-		if _, err = io.Copy(dst, src); err != nil {
-			return err
-		}
-		cmd := exec.Command("chmod", "+x", "bin/"+name)
-		out, err := cmd.Output()
-		if err != nil {
-			fmt.Println(out)
-			return err
-		}
-
+	// Copy
+	if _, err = io.Copy(dst, src); err != nil {
+		return err
+	}
+	cmd := exec.Command("chmod", "+x", "bin/"+name)
+	out, err := cmd.Output()
+	if err != nil {
+		fmt.Println(out)
+		return err
 	}
 
-	return c.HTML(http.StatusOK, "")
+	return c.JSON(http.StatusOK, map[string]string{"message": "Upload successful"})
 }
 
 func updateMovieName(c echo.Context) error {
