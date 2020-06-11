@@ -4,7 +4,12 @@ MiniFaas is a small golang application that allows you to create and run binary 
 ## Getting Started
 To run this application you can use docker. Start the container by running the following command:
 
-### With Docker:
+### Build Docker image:
+```
+docker build . -t faas:1.0.0
+```
+
+### Run with Docker:
 ```
 docker run --rm --env TOKEN=<your-secure-token> -p <your-desired-port>:1312 -d faas:1.0.0
 ```
