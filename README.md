@@ -68,3 +68,6 @@ output:
 
 {"error": "There was an error trying to say hello"}
 ```
+
+## Todos:
+- [ ] Write tests
